@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.js";
 import publicRoutes from "./routes/public.js";
 import progressRoutes from "./routes/progress.js";
 import adminRoutes from "./routes/admin.js";
+import uploadRoutes from "./routes/upload.js";
 
 const app = express();
 
@@ -32,7 +33,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", publicRoutes);
 app.use("/api", progressRoutes);
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/upload", uploadRoutes);
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: "Something went wrong" });

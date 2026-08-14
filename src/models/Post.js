@@ -9,6 +9,7 @@ const postSchema = new mongoose.Schema(
     category: { type: String, default: "General" }, // e.g. "AWS", "IAM", "Kubernetes"
     tags: [{ type: String }],
     videoUrl: { type: String, default: "" },
+    thumbnailUrl: { type: String, default: "" },
     readTimeMinutes: { type: Number, default: 5 },
     status: { type: String, enum: ["draft", "published"], default: "draft" },
   },

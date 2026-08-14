@@ -10,21 +10,25 @@ const router = Router();
 router.use(requireAdmin);
 
 function crud(model, path, sort = { createdAt: -1 }) {
-  router.get(`/${path}`, async (req, res) => {
-    res.json(await model.find().sort(sort));
+  router.get(`/${path}`, async (req, res, next) => {
+    try { res.json(await model.find().sort(sort)); } catch (e) { next(e); }
   });
-  router.post(`/${path}`, async (req, res) => {
-    res.status(201).json(await model.create(req.body));
+  router.post(`/${path}`, async (req, res, next) => {
+    try { res.status(201).json(await model.create(req.body)); } catch (e) { next(e); }
   });
-  router.put(`/${path}/:id`, async (req, res) => {
-    const updated = await model.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json(updated);
+  router.put(`/${path}/:id`, async (req, res, next) => {
+    try {
+      const updated = await model.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      if (!updated) return res.status(404).json({ error: "Not found" });
+      res.json(updated);
+    } catch (e) { next(e); }
   });
-  router.delete(`/${path}/:id`, async (req, res) => {
-    const deleted = await model.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: "Not found" });
-    res.json({ ok: true });
+  router.delete(`/${path}/:id`, async (req, res, next) => {
+    try {
+      const deleted = await model.findByIdAndDelete(req.params.id);
+      if (!deleted) return res.status(404).json({ error: "Not found" });
+      res.json({ ok: true });
+    } catch (e) { next(e); }
   });
 }
 
@@ -33,7 +37,8 @@ crud(Quiz, "quizzes");
 crud(Lab, "labs");
 crud(InterviewQuestion, "interview-questions", { order: 1 });
 
-router.get("/analytics", async (req, res) => {
+router.get("/analytics", async (req, res, next) => {
+  try {
   const [userCount, postCount, publishedCount] = await Promise.all([
     User.countDocuments(),
     Post.countDocuments(),
@@ -60,6 +65,7 @@ router.get("/analytics", async (req, res) => {
   );
 
   res.json({ userCount, postCount, publishedCount, avgQuizScore, labCompletions, totalQuizAttempts });
+  } catch (e) { next(e); }
 });
 
 export default router;

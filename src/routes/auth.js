@@ -44,4 +44,28 @@ router.get("/me", requireAuth, (req, res) => {
   res.json(req.user);
 });
 
+// Admin username/password login — credentials come from env, no DB lookup needed
+router.post("/admin-login", (req, res) => {
+  const { username, password } = req.body || {};
+  const validUser = process.env.ADMIN_USERNAME;
+  const validPass = process.env.ADMIN_PASSWORD;
+
+  if (!validUser || !validPass) {
+    return res.status(500).json({ error: "Admin credentials not configured on server" });
+  }
+
+  if (username !== validUser || password !== validPass) {
+    return res.status(401).json({ error: "Invalid username or password" });
+  }
+
+  // Build a synthetic user object matching the JWT payload shape
+  const token = jwt.sign(
+    { id: "admin", name: "Admin", email: process.env.ADMIN_EMAIL || "", role: "admin" },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  res.json({ token });
+});
+
 export default router;

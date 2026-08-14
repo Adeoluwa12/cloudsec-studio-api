@@ -4,15 +4,25 @@ import { Strategy as GitHubStrategy } from "passport-github2";
 import User from "../models/User.js";
 
 async function findOrCreateUser({ provider, providerId, name, email, avatarUrl }) {
+  const isAdmin = email === process.env.ADMIN_EMAIL;
+
   let user = await User.findOne({ provider, providerId });
-  if (user) return user;
+  if (!user) {
+    // A user who signed in with Google before and now uses GitHub (or vice versa)
+    // with the same email is treated as the same person to avoid duplicate accounts.
+    user = await User.findOne({ email });
+  }
 
-  // A user who signed in with Google before and now uses GitHub (or vice versa)
-  // with the same email is treated as the same person to avoid duplicate accounts.
-  user = await User.findOne({ email });
-  if (user) return user;
+  if (user) {
+    // Ensure the admin role is always in sync with ADMIN_EMAIL
+    if (isAdmin && user.role !== "admin") {
+      user.role = "admin";
+      await user.save();
+    }
+    return user;
+  }
 
-  const role = email === process.env.ADMIN_EMAIL ? "admin" : "student";
+  const role = isAdmin ? "admin" : "student";
   const created = await User.create({ provider, providerId, name, email, avatarUrl, role });
   created._wasJustCreated = true; // transient flag, not persisted — read once in the callback route
   return created;
